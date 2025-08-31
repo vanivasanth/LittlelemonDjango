@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Little Lemon - Reservations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f8f4;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #495E57 0%, #3a4b45 100%);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #F4CE14;
+            margin-bottom: 10px;
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .booking-form {
+            flex: 1;
+            min-width: 350px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .bookings-display {
+            flex: 1;
+            min-width: 350px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        h2 {
+            color: #495E57;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #F4CE14;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495E57;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #495E57;
+            outline: none;
+        }
+        
+        button {
+            background-color: #F4CE14;
+            color: #495E57;
+            border: none;
+            padding: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100%;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        button:hover {
+            background-color: #e5be0e;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .booking-item {
+            padding: 18px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .booking-item:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .booking-item:last-child {
+            border-bottom: none;
+        }
+        
+        .booking-details {
+            flex-grow: 1;
+        }
+        
+        .booking-name {
+            font-weight: bold;
+            color: #495E57;
+            font-size: 1.1rem;
+        }
+        
+        .booking-time {
+            color: #666;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+        
+        .no-bookings {
+            text-align: center;
+            color: #888;
+            padding: 30px;
+            font-style: italic;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            display: none;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            display: none;
+        }
+        
+        .time-slot {
+            display: inline-block;
+            background: #495E57;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .time-slot.disabled {
+            background: #ccc;
+            color: #666;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Little Lemon</div>
+            <div class="tagline">Reservation System</div>
+        </header>
+        
+        <div class="success-message" id="successMessage">
+            Reservation successfully created!
+        </div>
+        
+        <div class="error-message" id="errorMessage">
+            Sorry, this time slot is already booked. Please choose another time.
+        </div>
+        
+        <div class="content">
+            <div class="booking-form">
+                <h2>Make a Reservation</h2>
+                <form id="reservationForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" id="first_name" name="first_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reservation_date">Date</label>
+                        <input type="date" id="reservation_date" name="reservation_date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reservation_slot">Time Slot</label>
+                        <select id="reservation_slot" name="reservation_slot" required>
+                            <option value="" disabled selected>Select time</option>
+                            <!-- Time slots will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <button type="submit">Book Now</button>
+                </form>
+                
+                <div style="margin-top: 20px;">
+                    <h3>Available Time Slots</h3>
+                    <div id="availableSlots">
+                        <!-- Available slots will be shown here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bookings-display">
+                <h2>Today's Reservations</h2>
+                <div id="bookingsList">
+                    <!-- Bookings will be displayed here -->
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 Little Lemon Restaurant. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Format time function to convert 24h to 12h format
+            function formatTime(slot) {
+                if (slot === 0) return "12:00 AM";
+                if (slot === 12) return "12:00 PM";
+                return slot > 12 ? `${slot - 12}:00 PM` : `${slot}:00 AM`;
+            }
+            
+            // Get today's date in YYYY-MM-DD format
+            function getTodayDate() {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // Set the date input to today
+            document.getElementById('reservation_date').value = getTodayDate();
+            
+            // Get bookings for the selected date
+            function getBookings() {
+                const date = document.getElementById('reservation_date').value;
+                
+                fetch(`/bookings?date=${date}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateBookingsDisplay(data);
+                        updateTimeSlots(data);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+            
+            // Update the bookings display
+            function updateBookingsDisplay(data) {
+                const bookingsList = document.getElementById('bookingsList');
+                
+                if (data.length === 0) {
+                    bookingsList.innerHTML = '<div class="no-bookings">No reservations for this date.</div>';
+                    return;
+                }
+                
+                let html = '';
+                data.forEach(item => {
+                    html += `
+                        <div class="booking-item">
+                            <div class="booking-details">
+                                <div class="booking-name">${item.fields.first_name}</div>
+                                <div class="booking-time">${formatTime(item.fields.reservation_slot)}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                bookingsList.innerHTML = html;
+            }
+            
+            // Update available time slots
+            function updateTimeSlots(bookings) {
+                const reservedSlots = bookings.map(item => item.fields.reservation_slot);
+                const slotSelect = document.getElementById('reservation_slot');
+                const availableSlotsContainer = document.getElementById('availableSlots');
+                
+                // Clear previous options except the first one
+                while (slotSelect.options.length > 1) {
+                    slotSelect.remove(1);
+                }
+                
+                // Clear available slots display
+                availableSlotsContainer.innerHTML = '';
+                
+                // Generate time slots from 10 AM to 9 PM (10 to 21)
+                for (let i = 10; i <= 21; i++) {
+                    // Add to dropdown
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = formatTime(i);
+                    
+                    if (reservedSlots.includes(i)) {
+                        option.disabled = true;
+                    }
+                    
+                    slotSelect.appendChild(option);
+                    
+                    // Add to available slots display
+                    const slotSpan = document.createElement('span');
+                    slotSpan.className = 'time-slot' + (reservedSlots.includes(i) ? ' disabled' : '');
+                    slotSpan.textContent = formatTime(i);
+                    availableSlotsContainer.appendChild(slotSpan);
+                }
+            }
+            
+            // Handle form submission
+            document.getElementById('reservationForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    first_name: document.getElementById('first_name').value,
+                    reservation_date: document.getElementById('reservation_date').value,
+                    reservation_slot: parseInt(document.getElementById('reservation_slot').value),
+                    csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value
+                };
+                
+                fetch('/bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': formData.csrfmiddlewaretoken
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('successMessage').style.display = 'none';
+                        document.getElementById('errorMessage').style.display = 'block';
+                    } else {
+                        document.getElementById('successMessage').style.display = 'block';
+                        document.getElementById('errorMessage').style.display = 'none';
+                        
+                        // Clear form
+                        document.getElementById('first_name').value = '';
+                        
+                        // Refresh bookings
+                        getBookings();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+            
+            // Add event listener for date change
+            document.getElementById('reservation_date').addEventListener('change', getBookings);
+            
+            // Initial load of bookings
+            getBookings();
+        });
+    </script>
+</body>
+</html>
